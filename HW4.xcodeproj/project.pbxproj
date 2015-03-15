@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		ACD6EA851AAFC51200FB9BE0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACD6EA841AAFC51200FB9BE0 /* main.cpp */; };
+		ACEBD4101AAFE12C001E87B1 /* Soduku.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ACEBD40E1AAFE12C001E87B1 /* Soduku.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +26,8 @@
 /* Begin PBXFileReference section */
 		ACD6EA811AAFC51200FB9BE0 /* HW4 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HW4; sourceTree = BUILT_PRODUCTS_DIR; };
 		ACD6EA841AAFC51200FB9BE0 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		ACEBD40E1AAFE12C001E87B1 /* Soduku.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Soduku.cpp; sourceTree = "<group>"; };
+		ACEBD40F1AAFE12C001E87B1 /* Soduku.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Soduku.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +61,8 @@
 			isa = PBXGroup;
 			children = (
 				ACD6EA841AAFC51200FB9BE0 /* main.cpp */,
+				ACEBD40E1AAFE12C001E87B1 /* Soduku.cpp */,
+				ACEBD40F1AAFE12C001E87B1 /* Soduku.h */,
 			);
 			path = HW4;
 			sourceTree = "<group>";
@@ -118,6 +123,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ACEBD4101AAFE12C001E87B1 /* Soduku.cpp in Sources */,
 				ACD6EA851AAFC51200FB9BE0 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -232,6 +238,7 @@
 				ACD6EA8A1AAFC51200FB9BE0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
