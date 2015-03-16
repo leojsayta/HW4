@@ -13,11 +13,13 @@
 #include <algorithm>
 #include <string>
 #include <exception>
-#include <vector>
 #include <map>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+
 
 using namespace std;
-
+using namespace boost::numeric::ublas;
 
 class Sequence
 {
@@ -32,7 +34,9 @@ class Puzzle
 {
 private:
     
-    map<string,int> sodukoGrid;
+    matrix<int,column_major>* sGrid;
+    
+    //map<string,int> sGrid;
     
     string rowLabels = "ABCDEFGHI";
     string colLabels = "123456789";
@@ -42,6 +46,11 @@ private:
     
 public:
     
+    matrix<int,column_major>* GetGrid()
+    {
+        return this->sGrid;
+    }
+
     Puzzle();
 };
 

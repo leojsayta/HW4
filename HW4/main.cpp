@@ -13,10 +13,15 @@
 #include <string>
 #include <exception>
 #include <vector>
-#include <ctime>
+#include <map>
+#include <utility>
+#include <boost/numeric/ublas/matrix.hpp>
 #include "Soduku.h"
 
 using namespace std;
+using namespace boost::numeric::ublas;
+
+#define EMPTY_STRING ""
 
 //#define READ_FROM_ARG           // if this is defined read input file from command line"
 
@@ -27,9 +32,9 @@ using namespace std;
 #define COL_MONTH_WIDTH 10      // set month column width
 
 // tokenize string s according to delimiter c
-vector<string>* split(const string& s, char c);
+std::vector<string>* split(const string& s, char c);
 
-void processPuzzleData(ifstream& in, Puzzle* pData);
+void getPuzzleData(ifstream& in, Puzzle* pData);
 
 int main(int argc, const char *argv[])
 {
@@ -56,19 +61,25 @@ int main(int argc, const char *argv[])
         if (!in)
             return (EXIT_FAILURE);
         
+        int loop = 1;
+        
         while (!in.eof())
         {
-            Puzzle* sodukuPuzzle;
+            Puzzle* sodukuPuzzle = new Puzzle();
             
-            processPuzzleData(in, sodukuPuzzle);
+            getPuzzleData(in, sodukuPuzzle);
             
-            
+            // solve puzzle...
             
             //data->push_back(strOutput);
             //cout << tmp << '\n';
             //cout << tmp << '\n';
             
+            if (loop == 49) {
+                cout << "Puzzle 49";
+            }
             
+            loop++;
         }
         
 
@@ -88,7 +99,7 @@ int main(int argc, const char *argv[])
     return 0;
 }
 
-void processPuzzleData(ifstream& in, Puzzle* pData)
+void getPuzzleData(ifstream& in, Puzzle* pData)
 {
     if (!in)
         throw EXIT_FAILURE;
@@ -103,19 +114,67 @@ void processPuzzleData(ifstream& in, Puzzle* pData)
     int col = 0;
     int row = 0;
 
+    //iterator<string> iter;
     do
     {
+        for (auto sqrPtr = strInput.begin(); sqrPtr != strInput.end(); sqrPtr++, col++)
+        {
+            char sqrCharVal = (char)(*sqrPtr);
+            int sqrNumVal = atoi(&sqrCharVal);
+            (pData->GetGrid())->insert_element(col, row, sqrNumVal);
+        }
         
+        col = 0;
+        row++;
         
         getline(in, strInput, '\n');        // Grab the next line
         
     } while ( !in.eof() && (strInput.find("Grid") == strInput.npos) );
 }
 
-// based on: https://www.safaribooksonline.com/library/view/C+++Cookbook/0596007612/ch04s07.html
-vector<string>* split(const string& s, char c)
+string convertRowNumToLetter(int row)
 {
-    vector<string>* v = new vector<string>();
+    switch (row)
+    {
+        case 0:
+            return "A";
+            break;
+        case 1:
+            return "B";
+            break;
+        case 2:
+            return "C";
+            break;
+        case 3:
+            return "D";
+            break;
+        case 4:
+            return "E";
+            break;
+        case 5:
+            return "F";
+            break;
+        case 6:
+            return "G";
+            break;
+        case 7:
+            return "H";
+            break;
+        case 8:
+            return "I";
+            break;
+        default:
+            return EMPTY_STRING;
+            break;
+    }
+    
+    return EMPTY_STRING;
+}
+
+// based on: https://www.safaribooksonline.com/library/view/C+++Cookbook/0596007612/ch04s07.html
+std::vector<string>* split(const string& s, char c)
+{
+    std::vector<string>* v = new std::vector<string>();
     string::size_type i = 0;
     string::size_type j = s.find(c);    // find next location of delimiter c
     

@@ -12,10 +12,12 @@
 Puzzle::Puzzle()
 {
     
-//    for (pair<const string,int>& item: this->sodukoGrid)
+//    for (pair<const string,int>& item: this->sGrid)
 //    {
 //        
 //    }
+    
+    sGrid = new matrix<int,column_major>(9,9);
     
     // Create row and col keys for 9x9 map
     // Letters for rows and Numbers for cols
@@ -23,7 +25,8 @@ Puzzle::Puzzle()
     {
         for (int row = 0; row < 9; row++)
         {
-            this->sodukoGrid[this->rowLabels.substr(row,1) + this->colLabels.substr(col,1)] = 0;
+            //this->sGrid[this->rowLabels.substr(row,1) + this->colLabels.substr(col,1)] = 0;
+            this->sGrid->insert_element(col, row, 0);
         }
     }
     
