@@ -16,12 +16,18 @@
 #include <map>
 #include <utility>
 #include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
+#include <boost/numeric/ublas/detail/iterator.hpp>
+#include <boost/numeric/ublas/io.hpp>
 #include "Soduku.h"
 
 using namespace std;
 using namespace boost::numeric::ublas;
 
 #define EMPTY_STRING ""
+
+typedef boost::numeric::ublas::matrix<int> m_t;
+
 
 //#define READ_FROM_ARG           // if this is defined read input file from command line"
 
@@ -61,25 +67,27 @@ int main(int argc, const char *argv[])
         if (!in)
             return (EXIT_FAILURE);
         
-        int loop = 1;
+        Puzzle* sodukuPuzzle;
         
         while (!in.eof())
         {
-            Puzzle* sodukuPuzzle = new Puzzle();
+            sodukuPuzzle = new Puzzle();
             
             getPuzzleData(in, sodukuPuzzle);
             
-            // solve puzzle...
+            const std::vector< matrix<int> >* v = sodukuPuzzle->GetRegions(3, 3);
             
-            //data->push_back(strOutput);
-            //cout << tmp << '\n';
-            //cout << tmp << '\n';
+            Puzzle::PrintGrid(*sodukuPuzzle->GetGrid());
             
-            if (loop == 49) {
-                cout << "Puzzle 49";
+            cout << std::endl;
+        
+            for (matrix<int> m: *v)
+            {
+                Puzzle::PrintGrid(m);
+                cout << std::endl;
             }
             
-            loop++;
+            delete sodukuPuzzle;
         }
         
 
@@ -90,13 +98,68 @@ int main(int argc, const char *argv[])
     }
     catch (exception& ex)
     {
-        printf("\nSomething went wrong:\n");
-        //printf(ex.what());
-        printf("\nPlease start over.");
         return 1;
     }
     
     return 0;
+}
+
+bool blah1(matrix<int>& m, m_t::iterator1& itrRow, m_t::iterator2& itrCol)
+{
+    bool validNumber = true;
+    
+    int val = *itrRow;
+    
+    if (validNumber)
+    {
+        if (itrCol != m.end2())
+            blah1(m, itrRow, ++itrCol);
+        else if (itrRow != m.end1())
+            blah1(m, ++itrRow, itrCol);
+        else
+            return true;
+    }
+    else
+    {
+        if (val == 9)
+        {
+            return false;
+        }
+        else
+        {
+            (*itrRow)++;
+            blah1(m, itrRow, itrCol);
+        }
+    }
+    
+    return true;
+}
+
+
+bool blah(matrix<int>& m, m_t::iterator1& itrRow, m_t::iterator2& itrCol, int val)
+{
+    bool validNumber = true;
+    
+    if (validNumber)
+    {
+        if (itrRow != m.end1())
+        {
+            itrRow++;
+        }
+    }
+    else
+    {
+        if (val == 9)
+        {
+            
+        }
+        else
+        {
+            blah(m, itrRow, itrCol, val + 1);
+        }
+    }
+    
+    return true;
 }
 
 void getPuzzleData(ifstream& in, Puzzle* pData)
