@@ -15,6 +15,7 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <cctype>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/detail/iterator.hpp>
@@ -37,10 +38,14 @@ typedef boost::numeric::ublas::matrix<int> m_t;
 #define COL_WIDTH 15            // set general column width for table
 #define COL_MONTH_WIDTH 10      // set month column width
 
+string ROW_LABELS = "ABCDEFGHI";
+string COL_LABELS = "123456789";
+
 // tokenize string s according to delimiter c
 std::vector<string>* split(const string& s, char c);
 
-void getPuzzleData(ifstream& in, Puzzle* pData);
+template <typename T>
+void getPuzzleData(ifstream& in, Puzzle<T>* pData, T (*convert)(char));
 
 int main(int argc, const char *argv[])
 {
@@ -67,25 +72,27 @@ int main(int argc, const char *argv[])
         if (!in)
             return (EXIT_FAILURE);
         
-        Puzzle* sodukuPuzzle;
+        Puzzle<int>* sodukuPuzzle;
         
         while (!in.eof())
         {
-            sodukuPuzzle = new Puzzle();
+            sodukuPuzzle = new Puzzle<int>();
             
-            getPuzzleData(in, sodukuPuzzle);
+            //getPuzzleData(in, sodukuPuzzle, atoi);
             
             const std::vector< matrix<int> >* v = sodukuPuzzle->GetRegions(3, 3);
-            
-            Puzzle::PrintGrid(*sodukuPuzzle->GetGrid());
-            
+
+            sodukuPuzzle->PrintPuzzle();
+
             cout << std::endl;
+            
+            sodukuPuzzle->PrintPuzzleRegions();
         
-            for (matrix<int> m: *v)
-            {
-                Puzzle::PrintGrid(m);
-                cout << std::endl;
-            }
+            cout << std::endl;
+            
+            sodukuPuzzle->Insert_Value(0, 1, 20);
+            
+            sodukuPuzzle->PrintPuzzleRegions();
             
             delete sodukuPuzzle;
         }
@@ -162,74 +169,43 @@ bool blah(matrix<int>& m, m_t::iterator1& itrRow, m_t::iterator2& itrCol, int va
     return true;
 }
 
-void getPuzzleData(ifstream& in, Puzzle* pData)
+template <typename T>
+void getPuzzleData(ifstream& in, Puzzle<T>* pData, T (*convert)(char))
 {
     if (!in)
         throw EXIT_FAILURE;
     
-    string strInput;        // string that will contain a lineinput from file
+    string strInput;                                // string that will contain a lineinput from file
     
-    getline(in, strInput, '\n'); // Grab the next line
+    getline(in, strInput, '\n');                    // Grab the next line
     
-    if (strInput.find("Grid") != strInput.npos)                     // necessary for first Grid... statement
+    if (strInput.find("Grid") != strInput.npos)     // necessary for first Grid... statement
         getline(in, strInput, '\n');
     
     int col = 0;
     int row = 0;
 
-    //iterator<string> iter;
     do
     {
         for (auto sqrPtr = strInput.begin(); sqrPtr != strInput.end(); sqrPtr++, col++)
         {
             char sqrCharVal = (char)(*sqrPtr);
-            int sqrNumVal = atoi(&sqrCharVal);
-            (pData->GetGrid())->insert_element(col, row, sqrNumVal);
+            T sqrVal = convert(&sqrCharVal);
+            //T sqrVal = atoi(&sqrCharVal);
+            pData->Insert_Value(col, row, sqrVal);
         }
         
         col = 0;
         row++;
         
-        getline(in, strInput, '\n');        // Grab the next line
+        getline(in, strInput, '\n');                // Grab the next line
         
     } while ( !in.eof() && (strInput.find("Grid") == strInput.npos) );
 }
 
 string convertRowNumToLetter(int row)
 {
-    switch (row)
-    {
-        case 0:
-            return "A";
-            break;
-        case 1:
-            return "B";
-            break;
-        case 2:
-            return "C";
-            break;
-        case 3:
-            return "D";
-            break;
-        case 4:
-            return "E";
-            break;
-        case 5:
-            return "F";
-            break;
-        case 6:
-            return "G";
-            break;
-        case 7:
-            return "H";
-            break;
-        case 8:
-            return "I";
-            break;
-        default:
-            return EMPTY_STRING;
-            break;
-    }
+    return &ROW_LABELS[row];
     
     return EMPTY_STRING;
 }
