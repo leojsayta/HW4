@@ -15,18 +15,18 @@
 //template <typename T>
 //Puzzle<T>::Puzzle()
 //{
-//    this->sGrid = new matrix<T>(this->initDimenNum, this->initDimenNum);
+//    this->pGrid = new matrix<T>(this->initDimenNum, this->initDimenNum);
 //    
 //    if (initGridValue != NULL)
 //    {
 //        // Create row and col keys for 9x9 map
 //        // Letters for rows and Numbers for cols
-//        for (int row = 0; row < this->sGrid->size1(); row++)
+//        for (int row = 0; row < this->pGrid->size1(); row++)
 //        {
-//            for (int col = 0; col < this->sGrid->size2(); col++)
+//            for (int col = 0; col < this->pGrid->size2(); col++)
 //            {
-//                //this->sGrid[this->rowLabels.substr(row,1) + this->colLabels.substr(col,1)] = 0;
-//                this->sGrid->insert_element(row, col, initGridValue);
+//                //this->pGrid[this->rowLabels.substr(row,1) + this->colLabels.substr(col,1)] = 0;
+//                this->pGrid->insert_element(row, col, initGridValue);
 //            }
 //        }
 //    }
@@ -52,7 +52,7 @@
 //template <typename T>
 //Puzzle<T>::~Puzzle()
 //{
-//    delete this->sGrid;
+//    delete this->pGrid;
 //}
 //
 //template <typename T>
@@ -90,7 +90,7 @@
 //}
 //
 //template <typename T>
-//bool Puzzle<T>::Insert_Value(int row, int col, T val)
+//bool Puzzle<T>::SetValue(int row, int col, T val)
 //{
 //    try
 //    {
@@ -106,7 +106,7 @@
 //template <typename T>
 //bool Puzzle<T>::IsValidNumber(int row, int col)
 //{
-//    T currentVal = this->sGrid->at_element(row, col);
+//    T currentVal = this->pGrid->at_element(row, col);
 //    
 //    if (currentVal == this->initGridValue)
 //    {
@@ -132,15 +132,15 @@
 //    //using boost::numeric::ublas::matrix;
 //    //using boost::numeric::ublas::matrix_range;
 //    
-//    if (this->sGrid->size1() % num_y_regions || this->sGrid->size2() % num_x_regions)
+//    if (this->pGrid->size1() % num_y_regions || this->pGrid->size2() % num_x_regions)
 //        return nullptr;
 //    
-//    for (int ySplit = 0; ySplit < this->sGrid->size1(); ySplit+=num_y_regions)
+//    for (int ySplit = 0; ySplit < this->pGrid->size1(); ySplit+=num_y_regions)
 //    {
-//        for (int xSplit = 0; xSplit < this->sGrid->size2(); xSplit+=num_x_regions)
+//        for (int xSplit = 0; xSplit < this->pGrid->size2(); xSplit+=num_x_regions)
 //        {
 //            const matrix_range< const matrix<T> > subMatrix(
-//                                                            *this->sGrid,
+//                                                            *this->pGrid,
 //                                                            range(ySplit, ySplit + num_y_regions),
 //                                                            range(xSplit, xSplit + num_x_regions));
 //            this->regions->push_back(matrix<T>(subMatrix));

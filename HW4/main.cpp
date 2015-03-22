@@ -44,8 +44,8 @@ string COL_LABELS = "123456789";
 // tokenize string s according to delimiter c
 std::vector<string>* split(const string& s, char c);
 
-template <typename T>
-void getPuzzleData(ifstream& in, Puzzle<T>* pData, T (*convert)(char));
+template <typename T, typename Q>
+void getPuzzleData(ifstream& in, Puzzle<T>* pData, T (*convert)(const Q*));
 
 int main(int argc, const char *argv[])
 {
@@ -78,9 +78,11 @@ int main(int argc, const char *argv[])
         {
             sodukuPuzzle = new Puzzle<int>();
             
-            //getPuzzleData(in, sodukuPuzzle, atoi);
+            getPuzzleData<int, char>(in, sodukuPuzzle, atoi);
             
-            const std::vector< matrix<int> >* v = sodukuPuzzle->GetRegions(3, 3);
+            sodukuPuzzle->PrintPuzzle();
+            
+            sodukuPuzzle->GetRegions();
 
             sodukuPuzzle->PrintPuzzle();
 
@@ -90,7 +92,9 @@ int main(int argc, const char *argv[])
         
             cout << std::endl;
             
-            sodukuPuzzle->Insert_Value(0, 1, 20);
+            sodukuPuzzle->SetValue(0, 1, 20);
+            sodukuPuzzle->GetValue(0, 1);
+            Puzzle<int> tp(*sodukuPuzzle);
             
             sodukuPuzzle->PrintPuzzleRegions();
             
@@ -169,8 +173,8 @@ bool blah(matrix<int>& m, m_t::iterator1& itrRow, m_t::iterator2& itrCol, int va
     return true;
 }
 
-template <typename T>
-void getPuzzleData(ifstream& in, Puzzle<T>* pData, T (*convert)(char))
+template <typename T, typename Q>
+void getPuzzleData(ifstream& in, Puzzle<T>* pData, T (*convert)(const Q*))
 {
     if (!in)
         throw EXIT_FAILURE;
@@ -192,7 +196,7 @@ void getPuzzleData(ifstream& in, Puzzle<T>* pData, T (*convert)(char))
             char sqrCharVal = (char)(*sqrPtr);
             T sqrVal = convert(&sqrCharVal);
             //T sqrVal = atoi(&sqrCharVal);
-            pData->Insert_Value(col, row, sqrVal);
+            pData->SetValue(row, col, sqrVal);
         }
         
         col = 0;
