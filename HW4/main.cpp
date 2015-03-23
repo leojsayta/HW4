@@ -27,9 +27,6 @@ using namespace boost::numeric::ublas;
 
 #define EMPTY_STRING ""
 
-typedef boost::numeric::ublas::matrix<int> m_t;
-
-
 //#define READ_FROM_ARG           // if this is defined read input file from command line"
 
 #define INPUT_FILE_NAME "../../../../../p096_sudoku.txt"
@@ -41,8 +38,8 @@ typedef boost::numeric::ublas::matrix<int> m_t;
 string ROW_LABELS = "ABCDEFGHI";
 string COL_LABELS = "123456789";
 
-// tokenize string s according to delimiter c
-std::vector<string>* split(const string& s, char c);
+string convertRowNumToLetter(int row);
+string convertColNumToLetter(int col);
 
 template <typename T, typename Q>
 void getPuzzleData(ifstream& in, Puzzle<T>* pData, T (*convert)(const Q*));
@@ -76,27 +73,39 @@ int main(int argc, const char *argv[])
         
         while (!in.eof())
         {
-            sodukuPuzzle = new Puzzle<int>();
+            sodukuPuzzle = new Puzzle<int>(0,1,9);
             
             getPuzzleData<int, char>(in, sodukuPuzzle, atoi);
-            
             sodukuPuzzle->PrintPuzzle();
-            
-            sodukuPuzzle->GetRegions();
-
-            sodukuPuzzle->PrintPuzzle();
-
             cout << std::endl;
             
-            sodukuPuzzle->PrintPuzzleRegions();
-        
+//            sodukuPuzzle->GetPuzzleRegions();
+//            sodukuPuzzle->PrintPuzzleRegions();
+//            cout << std::endl;
+            
+//            matrix<int> subM = sodukuPuzzle->GetEncapsulatingRegion(0, 1);
+//            Puzzle<int>::PrintMatrix(subM);
+//            cout << std::endl;
+            
+//            sodukuPuzzle->SetValue(0, 1, 20);
+//            int tmp = sodukuPuzzle->GetValue(0, 1);
+//            sodukuPuzzle->PrintPuzzle();
+//            cout << std::endl;
+            
+//            Puzzle<int> tp(*sodukuPuzzle);
+//            tp.PrintPuzzle();
+//            cout << std::endl;
+            
+//            matrix<int> subM = sodukuPuzzle->GetEncapsulatingRegion(5, 6);
+//            Puzzle<int>::PrintMatrix(subM);
+//            cout << std::endl;
+            
+//            sodukuPuzzle->PrintPuzzleRegions();
+//            cout << std::endl;
+            
+            sodukuPuzzle->Solve();
+            sodukuPuzzle->PrintPuzzleSolution();
             cout << std::endl;
-            
-            sodukuPuzzle->SetValue(0, 1, 20);
-            sodukuPuzzle->GetValue(0, 1);
-            Puzzle<int> tp(*sodukuPuzzle);
-            
-            sodukuPuzzle->PrintPuzzleRegions();
             
             delete sodukuPuzzle;
         }
@@ -113,64 +122,6 @@ int main(int argc, const char *argv[])
     }
     
     return 0;
-}
-
-bool blah1(matrix<int>& m, m_t::iterator1& itrRow, m_t::iterator2& itrCol)
-{
-    bool validNumber = true;
-    
-    int val = *itrRow;
-    
-    if (validNumber)
-    {
-        if (itrCol != m.end2())
-            blah1(m, itrRow, ++itrCol);
-        else if (itrRow != m.end1())
-            blah1(m, ++itrRow, itrCol);
-        else
-            return true;
-    }
-    else
-    {
-        if (val == 9)
-        {
-            return false;
-        }
-        else
-        {
-            (*itrRow)++;
-            blah1(m, itrRow, itrCol);
-        }
-    }
-    
-    return true;
-}
-
-
-bool blah(matrix<int>& m, m_t::iterator1& itrRow, m_t::iterator2& itrCol, int val)
-{
-    bool validNumber = true;
-    
-    if (validNumber)
-    {
-        if (itrRow != m.end1())
-        {
-            itrRow++;
-        }
-    }
-    else
-    {
-        if (val == 9)
-        {
-            
-        }
-        else
-        {
-            blah(m, itrRow, itrCol, val + 1);
-        }
-    }
-    
-    return true;
 }
 
 template <typename T, typename Q>
@@ -214,27 +165,9 @@ string convertRowNumToLetter(int row)
     return EMPTY_STRING;
 }
 
-// based on: https://www.safaribooksonline.com/library/view/C+++Cookbook/0596007612/ch04s07.html
-std::vector<string>* split(const string& s, char c)
+string convertColNumToLetter(int col)
 {
-    std::vector<string>* v = new std::vector<string>();
-    string::size_type i = 0;
-    string::size_type j = s.find(c);    // find next location of delimiter c
+    return &COL_LABELS[col];
     
-    while (j != string::npos)           // continue processing s until c is not found
-    {
-        v->push_back(s.substr(i, j - i));   // add substring delimited by c to vector v
-        do
-        {
-            i = ++j;
-            j = s.find(c, j);           // find next location of delimiter c
-        }
-        while (j == i);                 // bypass duplicate delimiters
-        
-        if (j == string::npos)          // if reached last delimiter in s, add any substring following the last delimiter to v
-            v->push_back( s.substr(i, s.length()));
-    }
-    
-    return v;
+    return EMPTY_STRING;
 }
-
