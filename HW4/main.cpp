@@ -69,6 +69,7 @@ int main(int argc, const char *argv[])
         if (!in)
             return (EXIT_FAILURE);
         
+        int count = 1;
         Puzzle<int>* sodukuPuzzle;
         
         while (!in.eof())
@@ -76,43 +77,23 @@ int main(int argc, const char *argv[])
             sodukuPuzzle = new Puzzle<int>(0,1,9);
             
             getPuzzleData<int, char>(in, sodukuPuzzle, atoi);
+            
+            cout << "Count = " << count << std::endl;
+            cout << "Original:" << std::endl;
             sodukuPuzzle->PrintPuzzle();
-            cout << std::endl;
-            
-//            sodukuPuzzle->GetPuzzleRegions();
-//            sodukuPuzzle->PrintPuzzleRegions();
-//            cout << std::endl;
-            
-//            matrix<int> subM = sodukuPuzzle->GetEncapsulatingRegion(0, 1);
-//            Puzzle<int>::PrintMatrix(subM);
-//            cout << std::endl;
-            
-//            sodukuPuzzle->SetValue(0, 1, 20);
-//            int tmp = sodukuPuzzle->GetValue(0, 1);
-//            sodukuPuzzle->PrintPuzzle();
-//            cout << std::endl;
-            
-//            Puzzle<int> tp(*sodukuPuzzle);
-//            tp.PrintPuzzle();
-//            cout << std::endl;
-            
-//            matrix<int> subM = sodukuPuzzle->GetEncapsulatingRegion(5, 6);
-//            Puzzle<int>::PrintMatrix(subM);
-//            cout << std::endl;
-            
-//            sodukuPuzzle->PrintPuzzleRegions();
-//            cout << std::endl;
-            
+
             sodukuPuzzle->Solve();
+            
+            cout << "Solved:" << std::endl;
             sodukuPuzzle->PrintPuzzleSolution();
             cout << std::endl;
+            
+            count++;
             
             delete sodukuPuzzle;
         }
         
-
         in.close();         // close file handle
-        
         
         //cout << "Ending..." << '\n';
     }

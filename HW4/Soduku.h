@@ -115,7 +115,7 @@ public:
     
     T GetIncrementValue() const
     {
-        return this->incrementVal;
+        return this->incrementValue;
     }
     
     T GetMaxGridValue() const
@@ -148,7 +148,7 @@ public:
         return this->pSolved;
     }
     
-    bool IsValidNumber(int row, int col);
+    bool IsValidNumber(int row, int col, T val = T{});
     
     void Solve();
 
@@ -329,9 +329,6 @@ matrix<T> Puzzle<T>::GetEncapsulatingRegion(matrix<T>& m, int rowIndex, int colI
     matrix_range< matrix<T> > subMatrixRange(m, range(rowStart, rowEnd), range(colStart, colEnd));
     matrix<T> subMatrix = matrix<T>(subMatrixRange);
     
-    Puzzle<T>::PrintMatrix(subMatrix);
-    cout << std::endl;
-
     return subMatrix;
     
 }
@@ -386,10 +383,6 @@ const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions(int yNumRegions, int
                                                             *this->pOrig,
                                                             range(rowStart, rowEnd),
                                                             range(colStart, colEnd));
-//            matrix<T> tmpM(subMatrix);
-//            Puzzle<T>::PrintMatrix(tmpM);
-//            cout << std::endl;
-            
             this->regions->push_back(matrix<T>(subMatrix));
         }
     }
@@ -398,13 +391,17 @@ const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions(int yNumRegions, int
 }
 
 template <typename T>
-bool Puzzle<T>::IsValidNumber(int row, int col)
+bool Puzzle<T>::IsValidNumber(int row, int col, T val)
 {
     using boost::numeric::ublas::range;
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_range;
     
-    T currentVal = this->pSolved(row, col);
+    T currentVal;
+    if (val != T{})
+        currentVal = val;
+    else
+        currentVal = this->pSolved(row, col);
     
     if (currentVal == this->initGridValue)
     {
@@ -428,91 +425,103 @@ bool Puzzle<T>::IsValidNumber(int row, int col)
 template <typename T>
 void Puzzle<T>::solve(int rowIndex, int colIndex)
 {
+//    cout << "Starting:  At row = " << rowIndex << ", col = " << colIndex << std::endl;
+//    cout << std::endl;
+//    Puzzle<T>::PrintMatrix(this->pSolved);
+//    cout << std::endl;
+    
+    bool skipValidCheck = false;
+    bool isValidNum = false;
+    
+    if (this->pOrig->operator()(rowIndex, colIndex) != this->GetInitGridValue())
+    {
+        skipValidCheck = true;
+        isValidNum = true;
+    }
+    
     T val = this->pSolved(rowIndex, colIndex);
     
-    if (val == T{})
+    while (!skipValidCheck && !(isValidNum = this->IsValidNumber(rowIndex, colIndex, val)))
     {
-        val = this->incrementValue;
+        if (val == this->GetMaxGridValue())
+            break;
+        
+        val = val + this->GetIncrementValue();
         this->pSolved(rowIndex, colIndex) = val;
     }
     
-    // Check for initially set value
-    if ((this->pOrig->operator()(rowIndex, colIndex) != this->initGridValue)
-        || this->IsValidNumber(rowIndex, colIndex))
+    if (skipValidCheck || isValidNum)
     {
-        if (colIndex < this->pSolved.size2())
+        if (colIndex < this->pSolved.size2() - 1)
         {
-//            if (rowIndex == this->pSolved.size1)
-//                return;
-            
-            cout << "At row = " << rowIndex << ", col = " << colIndex << "++, val = " << val << std::endl;
-            cout << std::endl;
-            Puzzle<T>::PrintMatrix(this->pSolved);
-            cout << std::endl;
+//            cout << "At row = " << rowIndex << ", col = ++" << colIndex << ", val = " << val << std::endl;
+//            cout << std::endl;
+//            Puzzle<T>::PrintMatrix(this->pSolved);
+//            cout << std::endl;
             
             solve(rowIndex, ++colIndex);
         }
-        else if (rowIndex < this->pSolved.size1())
+        else if (rowIndex < this->pSolved.size1() - 1)
         {
-            if (colIndex == this->pSolved.size2())
-                colIndex = 0;
-                
-            cout << "At row = " << rowIndex << "++, col = " << colIndex << ", val = " << val << std::endl;
-            cout << std::endl;
-            Puzzle<T>::PrintMatrix(this->pSolved);
-            cout << std::endl;
+//            cout << "At row = ++" << rowIndex << ", col = (-->0)" << colIndex << ", val = " << val << std::endl;
+//            cout << std::endl;
+//            Puzzle<T>::PrintMatrix(this->pSolved);
+//            cout << std::endl;
             
             solve(++rowIndex, 0);
-        }
-        else
-        {
-            cout << "Solved:?" << std::endl;
-            cout << "At row = " << rowIndex - 1 << ", col = " << colIndex - 1 << ", val = " << val << std::endl;
-            cout << std::endl;
-            Puzzle<T>::PrintMatrix(this->pSolved);
-            cout << std::endl;
-            
-            return;
         }
     }
     else
     {
-        if (val == this->GetMaxGridValue())
+        this->pSolved(rowIndex, colIndex) = this->GetInitGridValue();
+        bool isMaxValue = false;
+        do
         {
             if (colIndex == 0)
             {
-                cout << "At row = --" << rowIndex << ", col = " << colIndex << " (->" << this->pSolved.size2() - 1 << "), val = " << val << " (Max)" << std::endl;
-                cout << std::endl;
-                Puzzle<T>::PrintMatrix(this->pSolved);
-                cout << std::endl;
+                if (rowIndex == 0)
+                {
+                    cout << "Unsolvable by this algorithm:" << std::endl;
+                    cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+                    cout << std::endl;
+                    Puzzle<T>::PrintMatrix(this->pSolved);
+                    cout << std::endl;
+                    return;
+                }
                 
-                
-                solve(--rowIndex, this->pSolved.size2() - 1);
+                --rowIndex;
+                colIndex = (int)(this->pSolved.size2());
             }
-            else
-            {
-                cout << "At row = " << rowIndex << ", col = --" << colIndex << ", val = " << val << " (Max)" << std::endl;
-                cout << std::endl;
-                Puzzle<T>::PrintMatrix(this->pSolved);
-                cout << std::endl;
-                
-                
-                solve(rowIndex, --colIndex);
-            }
-        }
-        else
-        {
-            cout << "At row = " << rowIndex << ", col = " << colIndex << ", val = " << val << "++" << std::endl;
-            cout << std::endl;
-            Puzzle<T>::PrintMatrix(this->pSolved);
-            cout << std::endl;
             
-            this->pSolved(rowIndex, colIndex) = this->pSolved(rowIndex, colIndex) + this->incrementValue;
-            solve(rowIndex, colIndex);
+            skipValidCheck  = (this->pOrig->operator()(rowIndex, --colIndex) != this->GetInitGridValue());
+            isMaxValue = ((val = this->pSolved(rowIndex, colIndex)) == this->GetMaxGridValue());
+            
+            if (!skipValidCheck && isMaxValue)
+            {
+                this->pSolved(rowIndex, colIndex) = this->GetInitGridValue();
+            }
         }
+        while ( skipValidCheck || isMaxValue );
+            
+        val = val + this->GetIncrementValue();
+        
+        this->pSolved(rowIndex, colIndex) = val;
+        
+//        cout << "Reset to row = " << rowIndex << ", col = " << colIndex << ", val = " << val << std::endl;
+//        cout << std::endl;
+//        Puzzle<T>::PrintMatrix(this->pSolved);
+//        cout << std::endl;
+        
+        solve(rowIndex, colIndex);
     }
     
-    return;
+//    cout << "Original:  " << std::endl;
+//    Puzzle<T>::PrintMatrix(*this->pOrig);
+//    cout << std::endl;
+//    
+//    cout << "Solved?:" << std::endl;
+//    Puzzle<T>::PrintMatrix(this->pSolved);
+//    cout << std::endl;
 }
 
 template <typename T>

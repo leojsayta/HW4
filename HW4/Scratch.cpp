@@ -43,6 +43,49 @@ void createHeader(ofstream& outputfile);
 // create formatted table data from pData, and output to file using out
 void createRevenueTable(ofstream& outputfile, const vector< vector<double>* >* const pData);
 
+//            if (colIndex == 0)
+//            {
+//                cout << "At row = --" << rowIndex << ", col = " << colIndex << " (->" << this->pSolved.size2() - 1 << "), val = " << val << " (Max)" << std::endl;
+//                cout << std::endl;
+//                Puzzle<T>::PrintMatrix(this->pSolved);
+//                cout << std::endl;
+//
+//                this->pSolved(rowIndex, colIndex) = this->GetIncrementValue();
+//
+//
+//                --rowIndex;
+//                colIndex = (int)(this->pSolved.size2());
+//
+//
+//                T tmpVal = this->pSolved(rowIndex, --colIndex) + this->GetIncrementValue();
+//                bool isValFixed = (this->pOrig->operator()(rowIndex, colIndex) != this->GetInitGridValue());
+//                while (isValFixed    // Check for initially set value
+//                       ||
+//                       tmpVal >= this->GetMaxGridValue())
+//                {
+//                    if (!isValFixed)
+//                        this->pSolved(rowIndex, colIndex) = this->GetIncrementValue();
+//
+//                    tmpVal = this->pSolved(rowIndex, --colIndex) + this->incrementValue;
+//                    isValFixed = (this->pOrig->operator()(rowIndex, colIndex) != this->GetInitGridValue());
+//                }
+//
+//                cout << "At row = " << rowIndex << ", col = " << colIndex << ", val = " << tmpVal << std::endl;
+//                cout << std::endl;
+//                Puzzle<T>::PrintMatrix(this->pSolved);
+//                cout << std::endl;
+//
+//                this->pSolved(rowIndex, colIndex) = tmpVal;
+//
+//                solve(rowIndex, colIndex);
+//            }
+//            else
+//            {
+//            cout << "At row = " << rowIndex << ", col = --" << colIndex << ", val = " << val << " (Max)" << std::endl;
+//            cout << std::endl;
+//            Puzzle<T>::PrintMatrix(this->pSolved);
+//
+
 
 int mainsail(int argc, const char *argv[])
 {
