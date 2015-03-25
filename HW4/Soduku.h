@@ -46,7 +46,11 @@ private:
     int num_y_regions;
     int num_x_regions;
     
+    int numSqrsPerSide;
+    int effAxisLgth;
+    
     std::vector< matrix<T> >* regions;
+    std::vector<T> itemSet;
     
     typename matrix<T>::iterator1 getRowIter()
     {
@@ -94,24 +98,6 @@ public:
     
     bool SetValue(int row, int col, T val);
     
-    bool ContainsMultipleVal(int rowIndex, int colIndex, T val);
-    
-    bool ContainsMultipleVal(matrix_row< matrix<T> >& mRow, T val);
-    
-    bool ContainsMultipleVal(matrix_column< matrix<T> >& mRow, T val);
-    
-    bool ContainsMultipleVal(matrix<T>& m, T val);
-    
-    bool RegionContainsMultipleVal(int rowIndex, int colIndex, T val);
-    
-    matrix<T> GetEncapsulatingRegion(int rowIndex, int colIndex);
-    
-    matrix<T> GetEncapsulatingRegion(matrix<T>& m, int rowIndex, int colIndex);
-    
-    const std::vector< matrix<T> >* GetPuzzleRegions();
-    
-    const std::vector< matrix<T> >* GetPuzzleRegions(int yNumRegions, int xNumRegions);
-    
     T GetInitGridValue() const
     {
         return this->initGridValue;
@@ -151,6 +137,28 @@ public:
     {
         return this->pSolved;
     }
+    
+    const std::vector< matrix<T> >* GetPuzzleRegions();
+    
+    const std::vector< matrix<T> >* GetPuzzleRegions(int yNumRegions, int xNumRegions);
+    
+    bool ContainsMultipleVal(int rowIndex, int colIndex, T val);
+    
+    bool ContainsMultipleVal(matrix_row< matrix<T> >& mRow, T val);
+    
+    bool ContainsMultipleVal(matrix_column< matrix<T> >& mRow, T val);
+    
+    bool ContainsMultipleVal(matrix<T>& m, T val);
+    
+    bool RegionContainsMultipleVal(int rowIndex, int colIndex, T val);
+    
+    matrix<T> GetEncapsulatingRegion(int rowIndex, int colIndex);
+    
+    matrix<T> GetEncapsulatingRegion(matrix<T>& m, int rowIndex, int colIndex);
+    
+    void CreateItemSet(int rowIndex, int colIndex);
+    
+    bool IsInItemSet(T val);
     
     bool IsValidNumber(int row, int col, T val = T{});
     
@@ -196,6 +204,11 @@ Puzzle<T>::Puzzle(
     }
     
     this->pSolved = matrix<T>(*this->pOrig);
+    
+    this->itemSet = std::vector<T>();
+    
+    this->numSqrsPerSide = this->num_y_regions;
+    this->effAxisLgth = this->numSqrsPerSide - 1;
 }
 
 template <typename T>
@@ -298,19 +311,16 @@ bool Puzzle<T>::RegionContainsMultipleVal(int rowIndex, int colIndex, T val)
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_range;
     
-    int numSqrsPerSide = this->num_y_regions;
-    int effAxisLgth = numSqrsPerSide - 1;
-    int yRemDwn = effAxisLgth - rowIndex%numSqrsPerSide;
-    int yRemUp = rowIndex%numSqrsPerSide;
-    int xRemRt = effAxisLgth - colIndex%numSqrsPerSide;
-    int xRemLft = colIndex%numSqrsPerSide;
+    int yRemDwn = this->effAxisLgth - rowIndex%this->numSqrsPerSide;
+    int yRemUp = rowIndex%this->numSqrsPerSide;
+    int xRemRt = this->effAxisLgth - colIndex%this->numSqrsPerSide;
+    int xRemLft = colIndex%this->numSqrsPerSide;
     
     int rowStart = rowIndex - yRemUp;
     int rowEnd = rowIndex + yRemDwn + 1;
     
     int colStart = colIndex - xRemLft;
     int colEnd = colIndex + xRemRt + 1;
-    
     
     int count = 0;
     for (int row = rowStart; row < rowEnd; row++)
@@ -351,12 +361,10 @@ matrix<T> Puzzle<T>::GetEncapsulatingRegion(int rowIndex, int colIndex)
 template <typename T>
 matrix<T> Puzzle<T>::GetEncapsulatingRegion(matrix<T>& m, int rowIndex, int colIndex)
 {
-    int numSqrsPerSide = this->num_y_regions;
-    int effAxisLgth = numSqrsPerSide - 1;
-    int yRemDwn = effAxisLgth - rowIndex%numSqrsPerSide;
-    int yRemUp = rowIndex%numSqrsPerSide;
-    int xRemRt = effAxisLgth - colIndex%numSqrsPerSide;
-    int xRemLft = colIndex%numSqrsPerSide;
+    int yRemDwn = this->effAxisLgth - rowIndex%this->numSqrsPerSide;
+    int yRemUp = rowIndex%this->numSqrsPerSide;
+    int xRemRt = this->effAxisLgth - colIndex%this->numSqrsPerSide;
+    int xRemLft = colIndex%this->numSqrsPerSide;
     
     int rowStart = rowIndex - yRemUp;
     int rowEnd = rowIndex + yRemDwn + 1;
@@ -431,6 +439,95 @@ const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions(int yNumRegions, int
 }
 
 template <typename T>
+void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
+{
+    using boost::numeric::ublas::range;
+    using boost::numeric::ublas::matrix;
+    using boost::numeric::ublas::matrix_range;
+    
+    this->itemSet.clear();
+    
+    T currentVal = this->pSolved(rowIndex, colIndex);
+    
+    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
+    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
+    //matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
+    
+    int i = 0;
+    
+    for (T item: mRow)
+    {
+        if (item != this->GetInitGridValue()
+            && item != currentVal
+            && !this->IsInItemSet(item))
+        {
+            if (i >= this->itemSet.size())
+                this->itemSet.push_back(item);
+            else
+                this->itemSet[i] = item;
+        }
+        i++;
+    }
+
+    for (T item: mCol)
+    {
+        if (item != this->GetInitGridValue()
+            && item != currentVal
+            && !this->IsInItemSet(item))
+        {
+            if (i >= this->itemSet.size())
+                this->itemSet.push_back(item);
+            else
+                this->itemSet[i] = item;
+        }
+        i++;
+    }
+    
+    int yRemDwn = this->effAxisLgth - rowIndex%this->numSqrsPerSide;
+    int yRemUp = rowIndex%this->numSqrsPerSide;
+    int xRemRt = this->effAxisLgth - colIndex%this->numSqrsPerSide;
+    int xRemLft = colIndex%this->numSqrsPerSide;
+    
+    int rowStart = rowIndex - yRemUp;
+    int rowEnd = rowIndex + yRemDwn + 1;
+    
+    int colStart = colIndex - xRemLft;
+    int colEnd = colIndex + xRemRt + 1;
+    
+    T item = T{};
+    for (int row = rowStart; row < rowEnd; row++)
+    {
+        for (int col = colStart; col < colEnd; col++)
+        {
+            item = this->pSolved(row, col);
+            if (item != this->GetInitGridValue()
+                && item != currentVal
+                && !this->IsInItemSet(item))
+            {
+                if (i >= this->itemSet.size())
+                    this->itemSet.push_back(item);
+                else
+                    this->itemSet[i] = item;
+            }
+            i++;
+        }
+    }
+}
+
+template <typename T>
+bool Puzzle<T>::IsInItemSet(T val)
+{
+    for (T item: this->itemSet)
+    {
+        if (item == val) {
+            return true;
+        }
+    }
+ 
+    return false;
+}
+
+template <typename T>
 bool Puzzle<T>::IsValidNumber(int rowIndex, int colIndex, T val)
 {
     using boost::numeric::ublas::range;
@@ -487,6 +584,9 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
             break;
         
         val = val + this->GetIncrementValue();
+        
+        
+        
         this->pSolved(rowIndex, colIndex) = val;
     }
     
