@@ -50,7 +50,8 @@ private:
     int effAxisLgth;
     
     std::vector< matrix<T> >* regions;
-    std::vector<T> itemSet;
+    //std::vector<T> itemSet;
+    std:: vector<bool> itemSet;
     
     typename matrix<T>::iterator1 getRowIter()
     {
@@ -76,6 +77,8 @@ private:
     {
         return this->pOrig;
     }
+    
+    int convertItem(T item);
 
     void solve(int rowIndex, int colIndex);
     
@@ -156,11 +159,13 @@ public:
     
     matrix<T> GetEncapsulatingRegion(matrix<T>& m, int rowIndex, int colIndex);
     
+    int ConvertItemToInt(T item, int (*convertItem)(const T));
+    
     void CreateItemSet(int rowIndex, int colIndex);
     
     bool IsInItemSet(T val);
     
-    bool IsValidNumber(int row, int col, T val = T{});
+    bool IsValidNumber(int row, int col, T val = T{}, bool createItemSet = false);
     
     void Solve();
 
@@ -205,7 +210,7 @@ Puzzle<T>::Puzzle(
     
     this->pSolved = matrix<T>(*this->pOrig);
     
-    this->itemSet = std::vector<T>();
+    this->itemSet = std::vector<bool>(this->GetMaxGridValue() + 1, false);
     
     this->numSqrsPerSide = this->num_y_regions;
     this->effAxisLgth = this->numSqrsPerSide - 1;
@@ -439,48 +444,44 @@ const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions(int yNumRegions, int
 }
 
 template <typename T>
+int Puzzle<T>::ConvertItemToInt(T item, int (*convertItem)(const T))
+{
+    return convertItem(item);
+}
+
+template <typename T>
 void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
 {
     using boost::numeric::ublas::range;
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_range;
     
-    this->itemSet.clear();
+    for (int b = 1; b < this->itemSet.size(); b++)
+        this->itemSet[b] = false;
     
-    T currentVal = this->pSolved(rowIndex, colIndex);
+//    T currentVal = this->pSolved(rowIndex, colIndex);
     
     matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
     matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
     //matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
     
-    int i = 0;
-    
-    for (T item: mRow)
+    T item = T{};
+    for (int col = 0; col < this->pSolved.size2(); col++)
     {
-        if (item != this->GetInitGridValue()
-            && item != currentVal
-            && !this->IsInItemSet(item))
+        if (colIndex != col)
         {
-            if (i >= this->itemSet.size())
-                this->itemSet.push_back(item);
-            else
-                this->itemSet[i] = item;
+            item = this->pSolved(rowIndex, col);
+            this->itemSet[this->convertItem(item)] = true;
         }
-        i++;
     }
-
-    for (T item: mCol)
+    
+    for (int row = 0; row < this->pSolved.size1(); row++)
     {
-        if (item != this->GetInitGridValue()
-            && item != currentVal
-            && !this->IsInItemSet(item))
+        if (rowIndex != row)
         {
-            if (i >= this->itemSet.size())
-                this->itemSet.push_back(item);
-            else
-                this->itemSet[i] = item;
+            item = this->pSolved(row, colIndex);
+            this->itemSet[this->convertItem(item)] = true;
         }
-        i++;
     }
     
     int yRemDwn = this->effAxisLgth - rowIndex%this->numSqrsPerSide;
@@ -494,22 +495,15 @@ void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
     int colStart = colIndex - xRemLft;
     int colEnd = colIndex + xRemRt + 1;
     
-    T item = T{};
     for (int row = rowStart; row < rowEnd; row++)
     {
         for (int col = colStart; col < colEnd; col++)
         {
-            item = this->pSolved(row, col);
-            if (item != this->GetInitGridValue()
-                && item != currentVal
-                && !this->IsInItemSet(item))
+            if (row != rowIndex && col != colIndex)
             {
-                if (i >= this->itemSet.size())
-                    this->itemSet.push_back(item);
-                else
-                    this->itemSet[i] = item;
+                item = this->pSolved(row, col);
+                this->itemSet[this->convertItem(item)] = true;
             }
-            i++;
         }
     }
 }
@@ -517,46 +511,36 @@ void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
 template <typename T>
 bool Puzzle<T>::IsInItemSet(T val)
 {
-    for (T item: this->itemSet)
-    {
-        if (item == val) {
-            return true;
-        }
-    }
- 
-    return false;
+    return this->itemSet[this->convertItem(val)];
 }
 
 template <typename T>
-bool Puzzle<T>::IsValidNumber(int rowIndex, int colIndex, T val)
+bool Puzzle<T>::IsValidNumber(int rowIndex, int colIndex, T val, bool createItemSet)
 {
-    using boost::numeric::ublas::range;
-    using boost::numeric::ublas::matrix;
-    using boost::numeric::ublas::matrix_range;
+//    using boost::numeric::ublas::range;
+//    using boost::numeric::ublas::matrix;
+//    using boost::numeric::ublas::matrix_range;
     
-    T currentVal;
-    if (val != T{})
-        currentVal = val;
-    else
-        currentVal = this->pSolved(rowIndex, colIndex);
-    
-    if (currentVal == this->initGridValue)
-    {
+    if (val == this->initGridValue)
         return false;        // empty square
-    }
     
-    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
-    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
-    //matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
+    if (createItemSet)
+        this->CreateItemSet(rowIndex, colIndex);
     
-    if (this->ContainsMultipleVal(mRow, currentVal))
-        return false;
-    if (this->ContainsMultipleVal(mCol, currentVal))
-        return false;
-    if (this->RegionContainsMultipleVal(rowIndex, colIndex, currentVal))
-        return false;
+    return !(this->IsInItemSet(val));
     
-    return true;
+//    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
+//    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
+//    //matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
+//    
+//    if (this->ContainsMultipleVal(mRow, val))
+//        return false;
+//    if (this->ContainsMultipleVal(mCol, val))
+//        return false;
+//    if (this->RegionContainsMultipleVal(rowIndex, colIndex, val))
+//        return false;
+    
+//    return true;
 }
 
 template <typename T>
@@ -569,29 +553,48 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
     
     bool skipValidCheck = false;
     bool isValidNum = false;
+    T val = this->GetInitGridValue();
     
     if (this->pOrig->operator()(rowIndex, colIndex) != this->GetInitGridValue())
     {
         skipValidCheck = true;
         isValidNum = true;
     }
-    
-    T val = this->pSolved(rowIndex, colIndex);
-    
-    while (!skipValidCheck && !(isValidNum = this->IsValidNumber(rowIndex, colIndex, val)))
+    else
     {
-        if (val == this->GetMaxGridValue())
-            break;
+        val = this->pSolved(rowIndex, colIndex);
+        if (val == this->GetInitGridValue()) {
+            val = val + this->GetIncrementValue();
+        }
         
-        val = val + this->GetIncrementValue();
+        this->CreateItemSet(rowIndex, colIndex);
         
-        
-        
-        this->pSolved(rowIndex, colIndex) = val;
+        for (int b = this->convertItem(val); b < this->itemSet.size(); b++)
+        {
+            if (!this->itemSet[b])
+            {
+                val = T{b};
+                isValidNum = true;
+                break;
+            }
+        }
     }
+    
+//    while (!skipValidCheck && !(isValidNum = this->IsValidNumber(rowIndex, colIndex, val)))
+//    {
+//        if (val == this->GetMaxGridValue())
+//            break;
+//        
+//        val = val + this->GetIncrementValue();
+//        
+////        this->pSolved(rowIndex, colIndex) = val;
+//    }
     
     if (skipValidCheck || isValidNum)
     {
+        if (!skipValidCheck)
+            this->pSolved(rowIndex, colIndex) = val;
+        
         if (colIndex < this->pSolved.size2() - 1)
         {
 //            cout << "At row = " << rowIndex << ", col = ++" << colIndex << ", val = " << val << std::endl;
@@ -615,17 +618,24 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
     {
         this->pSolved(rowIndex, colIndex) = this->GetInitGridValue();
         bool isMaxValue = false;
+        
         do
         {
             if (colIndex == 0)
             {
+//                cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+//                cout << std::endl;
+//                Puzzle<T>::PrintMatrix(this->pSolved);
+//                cout << std::endl;
+                
+
                 if (rowIndex == 0)
                 {
                     cout << "Unsolvable by this algorithm:" << std::endl;
-                    cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-                    cout << std::endl;
-                    Puzzle<T>::PrintMatrix(this->pSolved);
-                    cout << std::endl;
+//                    cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+//                    cout << std::endl;
+//                    Puzzle<T>::PrintMatrix(this->pSolved);
+//                    cout << std::endl;
                     return;
                 }
                 
@@ -643,7 +653,7 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
         }
         while ( skipValidCheck || isMaxValue );
             
-        val = val + this->GetIncrementValue();
+        val = this->pSolved(rowIndex, colIndex) + this->GetIncrementValue();
         
         this->pSolved(rowIndex, colIndex) = val;
         
@@ -662,6 +672,12 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
 //    cout << "Solved?:" << std::endl;
 //    Puzzle<T>::PrintMatrix(this->pSolved);
 //    cout << std::endl;
+}
+
+template <typename T>
+int Puzzle<T>::convertItem(T item)
+{
+    return int{item};
 }
 
 template <typename T>
