@@ -94,11 +94,15 @@ public:
     
     bool SetValue(int row, int col, T val);
     
+    bool ContainsMultipleVal(int rowIndex, int colIndex, T val);
+    
     bool ContainsMultipleVal(matrix_row< matrix<T> >& mRow, T val);
     
     bool ContainsMultipleVal(matrix_column< matrix<T> >& mRow, T val);
     
     bool ContainsMultipleVal(matrix<T>& m, T val);
+    
+    bool RegionContainsMultipleVal(int rowIndex, int colIndex, T val);
     
     matrix<T> GetEncapsulatingRegion(int rowIndex, int colIndex);
     
@@ -288,6 +292,42 @@ bool Puzzle<T>::ContainsMultipleVal(matrix<T>& m, T val)
 }
 
 template <typename T>
+bool Puzzle<T>::RegionContainsMultipleVal(int rowIndex, int colIndex, T val)
+{
+    using boost::numeric::ublas::range;
+    using boost::numeric::ublas::matrix;
+    using boost::numeric::ublas::matrix_range;
+    
+    int numSqrsPerSide = this->num_y_regions;
+    int effAxisLgth = numSqrsPerSide - 1;
+    int yRemDwn = effAxisLgth - rowIndex%numSqrsPerSide;
+    int yRemUp = rowIndex%numSqrsPerSide;
+    int xRemRt = effAxisLgth - colIndex%numSqrsPerSide;
+    int xRemLft = colIndex%numSqrsPerSide;
+    
+    int rowStart = rowIndex - yRemUp;
+    int rowEnd = rowIndex + yRemDwn + 1;
+    
+    int colStart = colIndex - xRemLft;
+    int colEnd = colIndex + xRemRt + 1;
+    
+    
+    int count = 0;
+    for (int row = rowStart; row < rowEnd; row++)
+    {
+        for (int col = colStart; col < colEnd; col++)
+        {
+            if (val == this->pSolved(row, col))
+                count++;
+            if (count > 1)
+                return true;
+        }
+    }
+    
+    return count > 1 ? true : false;
+}
+
+template <typename T>
 matrix<T> Puzzle<T>::GetEncapsulatingRegion(int rowIndex, int colIndex)
 {
     int yRemDwn = 2 - rowIndex%3;
@@ -391,7 +431,7 @@ const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions(int yNumRegions, int
 }
 
 template <typename T>
-bool Puzzle<T>::IsValidNumber(int row, int col, T val)
+bool Puzzle<T>::IsValidNumber(int rowIndex, int colIndex, T val)
 {
     using boost::numeric::ublas::range;
     using boost::numeric::ublas::matrix;
@@ -401,22 +441,22 @@ bool Puzzle<T>::IsValidNumber(int row, int col, T val)
     if (val != T{})
         currentVal = val;
     else
-        currentVal = this->pSolved(row, col);
+        currentVal = this->pSolved(rowIndex, colIndex);
     
     if (currentVal == this->initGridValue)
     {
         return false;        // empty square
     }
     
-    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, row);;
-    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, col);;
-    matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
-
+    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
+    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
+    //matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
+    
     if (this->ContainsMultipleVal(mRow, currentVal))
         return false;
     if (this->ContainsMultipleVal(mCol, currentVal))
         return false;
-    if (this->ContainsMultipleVal(subM, currentVal))
+    if (this->RegionContainsMultipleVal(rowIndex, colIndex, currentVal))
         return false;
     
     return true;
