@@ -38,11 +38,13 @@ class Puzzle
 private:
     
     matrix<T>* pOrig;
-    matrix<T> pSolved;
+    matrix<T>* pSolved;
     T initGridValue;
     T incrementValue;
     T maxGridValue;
     int initDimenNum;
+    int xDimSize;
+    int yDimSize;
     int num_y_regions;
     int num_x_regions;
     
@@ -65,21 +67,19 @@ private:
     
     matrix_row< matrix<T> > getRow(int rowNum)
     {
-        return matrix_row< matrix<T> >(*this->pOrig, rowNum);
+        return matrix_row< matrix<T> >(this->pOrig, rowNum);
     }
     
     matrix_column< matrix<T> > getCol(int colNum)
     {
-        return matrix_column< matrix<T> >(*this->pOrig, colNum);
+        return matrix_column< matrix<T> >(this->pOrig, colNum);
     }
     
-    matrix<T>* getGrid()
+    matrix<T> getGrid()
     {
         return this->pOrig;
     }
     
-    int convertItem(T item);
-
     void solve(int rowIndex, int colIndex);
     
 public:
@@ -96,6 +96,10 @@ public:
     
     ~Puzzle();
     
+    
+    static int convertItem(const T item);
+    
+    static T convertInt(const int val);
     
     const T GetValue(int row, int col);
     
@@ -121,6 +125,16 @@ public:
         return this->initDimenNum;
     }
     
+    int GetXDimSize() const
+    {
+        return this->xDimSize;
+    }
+    
+    int GetYDimSize() const
+    {
+        return this->yDimSize;
+    }
+    
     int GetNum_Y_Regions() const
     {
         return this->num_y_regions;
@@ -131,12 +145,12 @@ public:
         return this->num_x_regions;
     }
     
-    matrix<T>* GetOrigPuzzleGrid() const
+    matrix<T> GetOrigPuzzleGrid() const
     {
         return this->pOrig;
     }
     
-    matrix<T>* GetSolvedPuzzleGrid() const
+    matrix<T> GetSolvedPuzzleGrid() const
     {
         return this->pSolved;
     }
@@ -159,7 +173,9 @@ public:
     
     matrix<T> GetEncapsulatingRegion(matrix<T>& m, int rowIndex, int colIndex);
     
-    int ConvertItemToInt(T item, int (*convertItem)(const T));
+    static int ConvertItemToInt(T item, int (*convertItem)(const T));
+    
+    static T ConvertIntToItem(int val, T (*convertInt)(const int));
     
     void CreateItemSet(int rowIndex, int colIndex);
     
@@ -199,18 +215,21 @@ Puzzle<T>::Puzzle(
     
     if (this->initGridValue != T{})
     {
-        for (int row = 0; row < this->pOrig->size1(); row++)
+        for (int row = 0; row < this->GetYDimSize(); row++)
         {
-            for (int col = 0; col < this->pOrig->size2(); col++)
+            for (int col = 0; col < this->GetXDimSize(); col++)
             {
                 this->pOrig->insert_element(row, col, this->initGridValue);
             }
         }
     }
     
-    this->pSolved = matrix<T>(*this->pOrig);
+    this->pSolved = new matrix<T>(*this->pOrig);
     
     this->itemSet = std::vector<bool>(this->GetMaxGridValue() + 1, false);
+    
+    this->xDimSize = this->initDimenNum;
+    this->yDimSize = this->initDimenNum;
     
     this->numSqrsPerSide = this->num_y_regions;
     this->effAxisLgth = this->numSqrsPerSide - 1;
@@ -226,20 +245,22 @@ Puzzle<T>::Puzzle(Puzzle<T> const & origP):
               origP.GetNum_Y_Regions(),
               origP.GetNum_X_Regions())
 {
-    this->pOrig = new matrix<T>(*(origP.GetOrigPuzzleGrid()));
-    this->pSolved = matrix<T>(*(origP.GetSolvedPuzzleGrid()));
+    this->pOrig = matrix<T>((origP.GetOrigPuzzleGrid()));
+    this->pSolved = matrix<T>((origP.GetSolvedPuzzleGrid()));
 }
 
 template <typename T>
 Puzzle<T>::~Puzzle()
 {
     delete this->pOrig;
+    delete this->pSolved;
+    delete this->regions;
 }
 
 template <typename T>
 const T Puzzle<T>::GetValue(int row, int col)
 {
-    return this->getGrid()->operator()(row, col);
+    return this->pOrig->operator()(row, col);
 }
 
 template <typename T>
@@ -247,8 +268,8 @@ bool Puzzle<T>::SetValue(int row, int col, T val)
 {
     try
     {
-        this->getGrid()->insert_element(row, col, val);
-        this->pSolved.insert_element(row, col, val);
+        this->pOrig->insert_element(row, col, val);
+        this->pSolved->insert_element(row, col, val);
         return true;
     }
     catch (exception& ex)
@@ -389,7 +410,7 @@ matrix<T> Puzzle<T>::GetEncapsulatingRegion(matrix<T>& m, int rowIndex, int colI
 template <typename T>
 const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions()
 {
-    if (this->regions != nullptr)
+    if (this->regions != NULL)
         return this->regions;
     else
         return this->GetPuzzleRegions(this->num_y_regions, this->num_x_regions);
@@ -412,7 +433,7 @@ const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions(int yNumRegions, int
     //using boost::numeric::ublas::matrix;
     //using boost::numeric::ublas::matrix_range;
     
-    if (this->pOrig->size1() % num_y_regions || this->pOrig->size2() % num_x_regions)
+    if (this->GetYDimSize() % num_y_regions || this->GetXDimSize() % num_x_regions)
         return nullptr;
     
     int rowStart = 0;
@@ -420,9 +441,9 @@ const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions(int yNumRegions, int
     int colStart = 0;
     int colEnd = 0;
     
-    for (int ySplit = 0; ySplit < this->pOrig->size1(); ySplit+=num_y_regions)
+    for (int ySplit = 0; ySplit < this->GetYDimSize(); ySplit+=num_y_regions)
     {
-        for (int xSplit = 0; xSplit < this->pOrig->size2(); xSplit+=num_x_regions)
+        for (int xSplit = 0; xSplit < this->GetXDimSize(); xSplit+=num_x_regions)
         {
             rowStart = ySplit;
             rowEnd = ySplit + num_y_regions;
@@ -450,6 +471,12 @@ int Puzzle<T>::ConvertItemToInt(T item, int (*convertItem)(const T))
 }
 
 template <typename T>
+T Puzzle<T>::ConvertIntToItem(int val, T (*convertInt)(const int))
+{
+    return convertInt(val);
+}
+
+template <typename T>
 void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
 {
     using boost::numeric::ublas::range;
@@ -461,25 +488,33 @@ void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
     
 //    T currentVal = this->pSolved(rowIndex, colIndex);
     
-    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
-    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
-    //matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
+//    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
+//    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
+//    matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
+    
+    if (rowIndex == 4 && colIndex == 8) {
+        cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+        cout << std::endl;
+        Puzzle<T>::PrintMatrix(*this->pSolved);
+        string dwewr = "\n";
+        cout << dwewr;
+    }
     
     T item = T{};
-    for (int col = 0; col < this->pSolved.size2(); col++)
+    for (int col = 0; col < this->GetXDimSize(); col++)
     {
         if (colIndex != col)
         {
-            item = this->pSolved(rowIndex, col);
+            item = (*this->pSolved)(rowIndex, col);
             this->itemSet[this->convertItem(item)] = true;
         }
     }
     
-    for (int row = 0; row < this->pSolved.size1(); row++)
+    for (int row = 0; row < this->GetYDimSize(); row++)
     {
         if (rowIndex != row)
         {
-            item = this->pSolved(row, colIndex);
+            item = (*this->pSolved)(row, colIndex);
             this->itemSet[this->convertItem(item)] = true;
         }
     }
@@ -501,7 +536,7 @@ void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
         {
             if (row != rowIndex && col != colIndex)
             {
-                item = this->pSolved(row, col);
+                item = (*this->pSolved)(row, col);
                 this->itemSet[this->convertItem(item)] = true;
             }
         }
@@ -562,18 +597,18 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
     }
     else
     {
-        val = this->pSolved(rowIndex, colIndex);
+        val = (*this->pSolved)(rowIndex, colIndex);
         if (val == this->GetInitGridValue()) {
             val = val + this->GetIncrementValue();
         }
         
         this->CreateItemSet(rowIndex, colIndex);
         
-        for (int b = this->convertItem(val); b < this->itemSet.size(); b++)
+        for (int b = Puzzle::convertItem(val); b < this->itemSet.size(); b++)
         {
             if (!this->itemSet[b])
             {
-                val = T{b};
+                val = Puzzle::convertItem(b);
                 isValidNum = true;
                 break;
             }
@@ -593,9 +628,9 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
     if (skipValidCheck || isValidNum)
     {
         if (!skipValidCheck)
-            this->pSolved(rowIndex, colIndex) = val;
+            (*this->pSolved)(rowIndex, colIndex) = val;
         
-        if (colIndex < this->pSolved.size2() - 1)
+        if (colIndex < this->GetXDimSize() - 1)
         {
 //            cout << "At row = " << rowIndex << ", col = ++" << colIndex << ", val = " << val << std::endl;
 //            cout << std::endl;
@@ -604,7 +639,7 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
             
             solve(rowIndex, ++colIndex);
         }
-        else if (rowIndex < this->pSolved.size1() - 1)
+        else if (rowIndex < this->GetYDimSize() - 1)
         {
 //            cout << "At row = ++" << rowIndex << ", col = (-->0)" << colIndex << ", val = " << val << std::endl;
 //            cout << std::endl;
@@ -616,7 +651,7 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
     }
     else
     {
-        this->pSolved(rowIndex, colIndex) = this->GetInitGridValue();
+        (*this->pSolved)(rowIndex, colIndex) = this->GetInitGridValue();
         bool isMaxValue = false;
         
         do
@@ -640,22 +675,22 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
                 }
                 
                 --rowIndex;
-                colIndex = (int)(this->pSolved.size2());
+                colIndex = (int)(this->GetXDimSize());
             }
             
             skipValidCheck  = (this->pOrig->operator()(rowIndex, --colIndex) != this->GetInitGridValue());
-            isMaxValue = ((val = this->pSolved(rowIndex, colIndex)) == this->GetMaxGridValue());
+            isMaxValue = ((val = (*this->pSolved)(rowIndex, colIndex)) == this->GetMaxGridValue());
             
             if (!skipValidCheck && isMaxValue)
             {
-                this->pSolved(rowIndex, colIndex) = this->GetInitGridValue();
+                (*this->pSolved)(rowIndex, colIndex) = this->GetInitGridValue();
             }
         }
         while ( skipValidCheck || isMaxValue );
             
-        val = this->pSolved(rowIndex, colIndex) + this->GetIncrementValue();
+        val = (*this->pSolved)(rowIndex, colIndex) + this->GetIncrementValue();
         
-        this->pSolved(rowIndex, colIndex) = val;
+        (*this->pSolved)(rowIndex, colIndex) = val;
         
 //        cout << "Reset to row = " << rowIndex << ", col = " << colIndex << ", val = " << val << std::endl;
 //        cout << std::endl;
@@ -675,9 +710,15 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
 }
 
 template <typename T>
-int Puzzle<T>::convertItem(T item)
+int Puzzle<T>::convertItem(const T item)
 {
     return int{item};
+}
+
+template <typename T>
+T Puzzle<T>::convertInt(const int val)
+{
+    return T{val};
 }
 
 template <typename T>
@@ -702,9 +743,10 @@ void Puzzle<T>::PrintPuzzle()
 {
     //using namespace boost::numeric::ublas;
     
-    for (int r = 0; r < this->getGrid()->size1(); r++)
+    for (int r = 0; r < this->GetYDimSize(); r++)
     {
-        std::cout << matrix_row< matrix<T> >(*this->getGrid(), r) << std::endl;
+        matrix_row< matrix<T> > mRow(*this->pOrig, r);
+        std::cout << mRow << std::endl;
     }
 }
 
@@ -713,9 +755,9 @@ void Puzzle<T>::PrintPuzzleSolution()
 {
     //using namespace boost::numeric::ublas;
     
-    for (int r = 0; r < this->pSolved.size1(); r++)
+    for (int r = 0; r < this->GetYDimSize(); r++)
     {
-        std::cout << matrix_row< matrix<T> >(this->pSolved, r) << std::endl;
+        std::cout << matrix_row< matrix<T> >(*this->pSolved, r) << std::endl;
     }
 }
 
