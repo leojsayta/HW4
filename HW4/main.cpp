@@ -12,8 +12,6 @@
 #include <sstream>
 #include <string>
 #include <exception>
-#include <vector>
-#include <map>
 #include <utility>
 #include <cctype>
 #include <boost/numeric/ublas/matrix.hpp>
