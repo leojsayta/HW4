@@ -72,7 +72,7 @@ int main(int argc, const char *argv[])
             return (EXIT_FAILURE);
         
         int count = 1;
-        Puzzle<int>* sodukuPuzzle;
+        Puzzle<int>* sodukuPuzzle = nullptr;
         
         while (!in.eof())
         {
@@ -81,18 +81,20 @@ int main(int argc, const char *argv[])
             getPuzzleData<int, char>(in, sodukuPuzzle, atoi);
             
             out << "Original " << count << ":" << std::endl;
-            (*sodukuPuzzle).PrintPuzzle(out);
+            sodukuPuzzle->PrintPuzzle(out);
 
-            (*sodukuPuzzle).Solve();
+            sodukuPuzzle->Solve();
             
             out << "Solved " << count << ":" << std::endl;
-            (*sodukuPuzzle).PrintPuzzleSolution(out);
+            sodukuPuzzle->PrintPuzzleSolution(out);
             out << std::endl;
             
             count++;
             
 //            delete sodukuPuzzle;
         }
+        
+        delete sodukuPuzzle;
         
         in.close();         // close file handle
         out.close();        // close file handle

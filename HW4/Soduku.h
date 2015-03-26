@@ -143,12 +143,12 @@ public:
     
     matrix<T> GetOrigPuzzleGrid() const
     {
-        return this->pOrig;
+        return *this->pOrig;
     }
     
     matrix<T> GetSolvedPuzzleGrid() const
     {
-        return this->pSolved;
+        return *this->pSolved;
     }
     
     const std::vector< matrix<T> >* GetPuzzleRegions();
@@ -219,7 +219,7 @@ Puzzle<T>::Puzzle(
             }
         }
     }
-    
+
     this->pSolved = new matrix<T>(*this->pOrig);
     
     this->itemSet = std::vector<bool>(this->GetMaxGridValue() + 1, false);
