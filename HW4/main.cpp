@@ -48,8 +48,6 @@ int main(int argc, const char *argv[])
 {
     try
     {
-        //printf("Starting...\n\n");
-        
         string inputFileName = INPUT_FILE_NAME;     // string that contains the name of the input file for processing
         string outputFileName = OUTPUT_FILE_NAME;   // string that contains the name of the file for output generation
         
@@ -65,9 +63,12 @@ int main(int argc, const char *argv[])
 #endif
         // open file for processing
         ifstream in(inputFileName);
-//        ofstream out(outputFileName);
+        ofstream out(outputFileName);
         
         if (!in)
+            return (EXIT_FAILURE);
+        
+        if (!out)
             return (EXIT_FAILURE);
         
         int count = 1;
@@ -79,15 +80,14 @@ int main(int argc, const char *argv[])
             
             getPuzzleData<int, char>(in, sodukuPuzzle, atoi);
             
-//            cout << "Count = " << count << std::endl;
-            cout << "Original " << count << ":" << std::endl;
-            (*sodukuPuzzle).PrintPuzzle();
+            out << "Original " << count << ":" << std::endl;
+            (*sodukuPuzzle).PrintPuzzle(out);
 
             (*sodukuPuzzle).Solve();
             
-            cout << "Solved " << count << ":" << std::endl;
-            (*sodukuPuzzle).PrintPuzzleSolution();
-            cout << std::endl;
+            out << "Solved " << count << ":" << std::endl;
+            (*sodukuPuzzle).PrintPuzzleSolution(out);
+            out << std::endl;
             
             count++;
             
@@ -95,8 +95,7 @@ int main(int argc, const char *argv[])
         }
         
         in.close();         // close file handle
-        
-        //cout << "Ending..." << '\n';
+        out.close();        // close file handle
     }
     catch (exception& ex)
     {

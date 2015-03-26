@@ -12,10 +12,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <string>
-#include <exception>
-#include <map>
 #include <boost/numeric/ublas/matrix.hpp>
-//#include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/utility/value_init.hpp>
 
@@ -52,7 +49,6 @@ private:
     int effAxisLgth;
     
     std::vector< matrix<T> >* regions;
-    //std::vector<T> itemSet;
     std:: vector<bool> itemSet;
     
     typename matrix<T>::iterator1 getRowIter()
@@ -185,13 +181,13 @@ public:
     
     void Solve();
 
-    static void PrintMatrix(matrix<T>& m);
+    static void PrintMatrix(matrix<T>& m, ostream& out = cout);
     
-    void PrintPuzzle();
+    void PrintPuzzle(ostream& out = cout);
     
-    void PrintPuzzleSolution();
+    void PrintPuzzleSolution(ostream& out = cout);
     
-    void PrintPuzzleRegions();
+    void PrintPuzzleRegions(ostream& out = cout);
     
 };
 
@@ -429,10 +425,6 @@ const std::vector< matrix<T> >* Puzzle<T>::GetPuzzleRegions(int yNumRegions, int
     this->num_y_regions = yNumRegions;
     this->num_x_regions = xNumRegions;
     
-    //using boost::numeric::ublas::range;
-    //using boost::numeric::ublas::matrix;
-    //using boost::numeric::ublas::matrix_range;
-    
     if (this->GetYDimSize() % num_y_regions || this->GetXDimSize() % num_x_regions)
         return nullptr;
     
@@ -486,20 +478,6 @@ void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
     for (int b = 1; b < this->itemSet.size(); b++)
         this->itemSet[b] = false;
     
-//    T currentVal = this->pSolved(rowIndex, colIndex);
-    
-//    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
-//    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
-//    matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
-    
-//    if (rowIndex == 4 && colIndex == 8) {
-//        cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-//        cout << std::endl;
-//        Puzzle<T>::PrintMatrix(*this->pSolved);
-//        string dwewr = "\n";
-//        cout << dwewr;
-//    }
-    
     T item = T{};
     for (int col = 0; col < this->GetXDimSize(); col++)
     {
@@ -552,10 +530,6 @@ bool Puzzle<T>::IsInItemSet(T val)
 template <typename T>
 bool Puzzle<T>::IsValidNumber(int rowIndex, int colIndex, T val, bool createItemSet)
 {
-//    using boost::numeric::ublas::range;
-//    using boost::numeric::ublas::matrix;
-//    using boost::numeric::ublas::matrix_range;
-    
     if (val == this->initGridValue)
         return false;        // empty square
     
@@ -563,35 +537,14 @@ bool Puzzle<T>::IsValidNumber(int rowIndex, int colIndex, T val, bool createItem
         this->CreateItemSet(rowIndex, colIndex);
     
     return !(this->IsInItemSet(val));
-    
-//    matrix_row< matrix<T> > mRow = matrix_row< matrix<T> >(this->pSolved, rowIndex);
-//    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
-//    //matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
-//    
-//    if (this->ContainsMultipleVal(mRow, val))
-//        return false;
-//    if (this->ContainsMultipleVal(mCol, val))
-//        return false;
-//    if (this->RegionContainsMultipleVal(rowIndex, colIndex, val))
-//        return false;
-    
-//    return true;
 }
 
 template <typename T>
 bool Puzzle<T>::solve(int& rowIndex, int& colIndex)
 {
-//    cout << "Starting:  At row = " << rowIndex << ", col = " << colIndex << std::endl;
-//    cout << std::endl;
-//    Puzzle<T>::PrintMatrix(this->pSolved);
-//    cout << std::endl;
-    
     bool skipValidCheck = false;
     bool isValidNum = false;
-    bool isMaxValue = false;
     T val = this->GetInitGridValue();
-    int nextColIndex = 0;
-    int nextRowIndex = 0;
     
     if ((*this->pOrig)(rowIndex, colIndex) != this->GetInitGridValue())
     {
@@ -625,20 +578,9 @@ bool Puzzle<T>::solve(int& rowIndex, int& colIndex)
         
         if (rowIndex == 8)
         {
-            //                cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-            //                cout << std::endl;
-            //                Puzzle<T>::PrintMatrix(this->pSolved);
-            //                cout << std::endl;
-            
-            
             if (colIndex == 8)
             {
-                
-                cout << "Solved --" << std::endl;
-                //                    cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-                //                    cout << std::endl;
-                //                    Puzzle<T>::PrintMatrix(this->pSolved);
-                //                    cout << std::endl;
+//                cout << "Solved --" << std::endl;
                 return true;
             }
         }
@@ -668,13 +610,6 @@ bool Puzzle<T>::solve(int& rowIndex, int& colIndex)
         return false;
     }
     
-//    cout << "Original:  " << std::endl;
-//    Puzzle<T>::PrintMatrix(*this->pOrig);
-//    cout << std::endl;
-//    
-//    cout << "Solved?:" << std::endl;
-//    Puzzle<T>::PrintMatrix(this->pSolved);
-//    cout << std::endl;
     return true;
 }
 
@@ -689,31 +624,14 @@ void Puzzle<T>::Solve()
     
     while (!this->solve(rowIndex, colIndex))
     {
-//        cout << "Solve = False: at row = " << rowIndex << ", col = " << colIndex << std::endl;
-//        cout << std::endl;
-//        Puzzle<T>::PrintMatrix(*this->pSolved);
-//        cout << std::endl;
-        
-//        skipValidCheck  = ((*this->pOrig)(rowIndex, colIndex) != this->GetInitGridValue());
-//        isMaxValue = ((*this->pSolved)(rowIndex, colIndex) == this->GetMaxGridValue());
-        
         do
         {
             if (colIndex == 0)
             {
-                //                cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-                //                cout << std::endl;
-                //                Puzzle<T>::PrintMatrix(this->pSolved);
-                //                cout << std::endl;
-                
                 
                 if (rowIndex == 0)
                 {
                     cout << "Unsolvable by this algorithm:" << std::endl;
-                    //                    cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-                    //                    cout << std::endl;
-                    //                    Puzzle<T>::PrintMatrix(this->pSolved);
-                    //                    cout << std::endl;
                     return;
                 }
                 
@@ -736,7 +654,6 @@ void Puzzle<T>::Solve()
         
         (*this->pSolved)(rowIndex, colIndex) = val;
     }
-    
 }
 
 template <typename T>
@@ -752,48 +669,40 @@ T Puzzle<T>::convertInt(const int val)
 }
 
 template <typename T>
-void Puzzle<T>::PrintMatrix(matrix<T>& m)
+void Puzzle<T>::PrintMatrix(matrix<T>& m, ostream& out)
 {
-    //using namespace boost::numeric::ublas;
-    
     for (int r = 0; r < m.size1(); r++)
     {
-        std::cout << matrix_row< matrix<T> >(m, r) << std::endl;
+        out << matrix_row< matrix<T> >(m, r) << std::endl;
     }
 }
 
 template <typename T>
-void Puzzle<T>::PrintPuzzle()
+void Puzzle<T>::PrintPuzzle(ostream& out)
 {
-    //using namespace boost::numeric::ublas;
-    
     for (int r = 0; r < this->GetYDimSize(); r++)
     {
         matrix_row< matrix<T> > mRow(*this->pOrig, r);
-        std::cout << mRow << std::endl;
+        out << mRow << std::endl;
     }
 }
 
 template <typename T>
-void Puzzle<T>::PrintPuzzleSolution()
+void Puzzle<T>::PrintPuzzleSolution(ostream& out)
 {
-    //using namespace boost::numeric::ublas;
-    
     for (int r = 0; r < this->GetYDimSize(); r++)
     {
-        std::cout << matrix_row< matrix<T> >(*this->pSolved, r) << std::endl;
+        out << matrix_row< matrix<T> >(*this->pSolved, r) << std::endl;
     }
 }
 
 template <typename T>
-void Puzzle<T>::PrintPuzzleRegions()
+void Puzzle<T>::PrintPuzzleRegions(ostream& out)
 {
-    //using namespace boost::numeric::ublas;
-    
     for (matrix<T> m: *this->GetPuzzleRegions())
     {
         Puzzle::PrintMatrix(m);
-        cout << std::endl;
+        out << std::endl;
     }
 }
 
