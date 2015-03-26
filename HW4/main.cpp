@@ -65,27 +65,28 @@ int main(int argc, const char *argv[])
 #endif
         // open file for processing
         ifstream in(inputFileName);
+//        ofstream out(outputFileName);
         
         if (!in)
             return (EXIT_FAILURE);
         
         int count = 1;
-        Puzzle<int> sodukuPuzzle;
+        Puzzle<int>* sodukuPuzzle;
         
         while (!in.eof())
         {
-            sodukuPuzzle = Puzzle<int>(0,1,9);
+            sodukuPuzzle = new Puzzle<int>(0,1,9);
             
-            getPuzzleData<int, char>(in, &sodukuPuzzle, atoi);
+            getPuzzleData<int, char>(in, sodukuPuzzle, atoi);
             
-            cout << "Count = " << count << std::endl;
-            cout << "Original:" << std::endl;
-            sodukuPuzzle.PrintPuzzle();
+//            cout << "Count = " << count << std::endl;
+            cout << "Original " << count << ":" << std::endl;
+            (*sodukuPuzzle).PrintPuzzle();
 
-            sodukuPuzzle.Solve();
+            (*sodukuPuzzle).Solve();
             
-            cout << "Solved:" << std::endl;
-            sodukuPuzzle.PrintPuzzleSolution();
+            cout << "Solved " << count << ":" << std::endl;
+            (*sodukuPuzzle).PrintPuzzleSolution();
             cout << std::endl;
             
             count++;

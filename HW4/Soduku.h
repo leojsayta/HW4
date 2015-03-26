@@ -80,7 +80,7 @@ private:
         return this->pOrig;
     }
     
-    void solve(int rowIndex, int colIndex);
+    bool solve(int& rowIndex, int& colIndex);
     
 public:
     
@@ -492,13 +492,13 @@ void Puzzle<T>::CreateItemSet(int rowIndex, int colIndex)
 //    matrix_column< matrix<T> > mCol = matrix_column< matrix<T> >(this->pSolved, colIndex);
 //    matrix<T> subM = this->GetEncapsulatingRegion(this->pSolved, row, col);
     
-    if (rowIndex == 4 && colIndex == 8) {
-        cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-        cout << std::endl;
-        Puzzle<T>::PrintMatrix(*this->pSolved);
-        string dwewr = "\n";
-        cout << dwewr;
-    }
+//    if (rowIndex == 4 && colIndex == 8) {
+//        cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+//        cout << std::endl;
+//        Puzzle<T>::PrintMatrix(*this->pSolved);
+//        string dwewr = "\n";
+//        cout << dwewr;
+//    }
     
     T item = T{};
     for (int col = 0; col < this->GetXDimSize(); col++)
@@ -579,7 +579,7 @@ bool Puzzle<T>::IsValidNumber(int rowIndex, int colIndex, T val, bool createItem
 }
 
 template <typename T>
-void Puzzle<T>::solve(int rowIndex, int colIndex)
+bool Puzzle<T>::solve(int& rowIndex, int& colIndex)
 {
 //    cout << "Starting:  At row = " << rowIndex << ", col = " << colIndex << std::endl;
 //    cout << std::endl;
@@ -588,9 +588,12 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
     
     bool skipValidCheck = false;
     bool isValidNum = false;
+    bool isMaxValue = false;
     T val = this->GetInitGridValue();
+    int nextColIndex = 0;
+    int nextRowIndex = 0;
     
-    if (this->pOrig->operator()(rowIndex, colIndex) != this->GetInitGridValue())
+    if ((*this->pOrig)(rowIndex, colIndex) != this->GetInitGridValue())
     {
         skipValidCheck = true;
         isValidNum = true;
@@ -615,20 +618,30 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
         }
     }
     
-//    while (!skipValidCheck && !(isValidNum = this->IsValidNumber(rowIndex, colIndex, val)))
-//    {
-//        if (val == this->GetMaxGridValue())
-//            break;
-//        
-//        val = val + this->GetIncrementValue();
-//        
-////        this->pSolved(rowIndex, colIndex) = val;
-//    }
-    
     if (skipValidCheck || isValidNum)
     {
         if (!skipValidCheck)
             (*this->pSolved)(rowIndex, colIndex) = val;
+        
+        if (rowIndex == 8)
+        {
+            //                cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+            //                cout << std::endl;
+            //                Puzzle<T>::PrintMatrix(this->pSolved);
+            //                cout << std::endl;
+            
+            
+            if (colIndex == 8)
+            {
+                
+                cout << "Solved --" << std::endl;
+                //                    cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+                //                    cout << std::endl;
+                //                    Puzzle<T>::PrintMatrix(this->pSolved);
+                //                    cout << std::endl;
+                return true;
+            }
+        }
         
         if (colIndex < this->GetXDimSize() - 1)
         {
@@ -637,7 +650,7 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
 //            Puzzle<T>::PrintMatrix(this->pSolved);
 //            cout << std::endl;
             
-            solve(rowIndex, ++colIndex);
+            return solve(rowIndex, ++colIndex);
         }
         else if (rowIndex < this->GetYDimSize() - 1)
         {
@@ -645,59 +658,14 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
 //            cout << std::endl;
 //            Puzzle<T>::PrintMatrix(this->pSolved);
 //            cout << std::endl;
-            
-            solve(++rowIndex, 0);
+            colIndex = 0;
+            return solve(++rowIndex, colIndex);
         }
     }
     else
     {
         (*this->pSolved)(rowIndex, colIndex) = this->GetInitGridValue();
-        bool isMaxValue = false;
-        
-        do
-        {
-            if (colIndex == 0)
-            {
-//                cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-//                cout << std::endl;
-//                Puzzle<T>::PrintMatrix(this->pSolved);
-//                cout << std::endl;
-                
-
-                if (rowIndex == 0)
-                {
-                    cout << "Unsolvable by this algorithm:" << std::endl;
-//                    cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
-//                    cout << std::endl;
-//                    Puzzle<T>::PrintMatrix(this->pSolved);
-//                    cout << std::endl;
-                    return;
-                }
-                
-                --rowIndex;
-                colIndex = (int)(this->GetXDimSize());
-            }
-            
-            skipValidCheck  = (this->pOrig->operator()(rowIndex, --colIndex) != this->GetInitGridValue());
-            isMaxValue = ((val = (*this->pSolved)(rowIndex, colIndex)) == this->GetMaxGridValue());
-            
-            if (!skipValidCheck && isMaxValue)
-            {
-                (*this->pSolved)(rowIndex, colIndex) = this->GetInitGridValue();
-            }
-        }
-        while ( skipValidCheck || isMaxValue );
-            
-        val = (*this->pSolved)(rowIndex, colIndex) + this->GetIncrementValue();
-        
-        (*this->pSolved)(rowIndex, colIndex) = val;
-        
-//        cout << "Reset to row = " << rowIndex << ", col = " << colIndex << ", val = " << val << std::endl;
-//        cout << std::endl;
-//        Puzzle<T>::PrintMatrix(this->pSolved);
-//        cout << std::endl;
-        
-        solve(rowIndex, colIndex);
+        return false;
     }
     
 //    cout << "Original:  " << std::endl;
@@ -707,6 +675,68 @@ void Puzzle<T>::solve(int rowIndex, int colIndex)
 //    cout << "Solved?:" << std::endl;
 //    Puzzle<T>::PrintMatrix(this->pSolved);
 //    cout << std::endl;
+    return true;
+}
+
+template <typename T>
+void Puzzle<T>::Solve()
+{
+    bool skipValidCheck = false;
+    bool isMaxValue = false;
+    T val = this->GetInitGridValue();
+    int rowIndex = 0;
+    int colIndex = 0;
+    
+    while (!this->solve(rowIndex, colIndex))
+    {
+//        cout << "Solve = False: at row = " << rowIndex << ", col = " << colIndex << std::endl;
+//        cout << std::endl;
+//        Puzzle<T>::PrintMatrix(*this->pSolved);
+//        cout << std::endl;
+        
+//        skipValidCheck  = ((*this->pOrig)(rowIndex, colIndex) != this->GetInitGridValue());
+//        isMaxValue = ((*this->pSolved)(rowIndex, colIndex) == this->GetMaxGridValue());
+        
+        do
+        {
+            if (colIndex == 0)
+            {
+                //                cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+                //                cout << std::endl;
+                //                Puzzle<T>::PrintMatrix(this->pSolved);
+                //                cout << std::endl;
+                
+                
+                if (rowIndex == 0)
+                {
+                    cout << "Unsolvable by this algorithm:" << std::endl;
+                    //                    cout << "At row = " << rowIndex << ", col = " << colIndex << std::endl;
+                    //                    cout << std::endl;
+                    //                    Puzzle<T>::PrintMatrix(this->pSolved);
+                    //                    cout << std::endl;
+                    return;
+                }
+                
+                --rowIndex;
+                colIndex = (int)(this->GetXDimSize());
+            }
+            --colIndex;
+            
+            skipValidCheck  = ((*this->pOrig)(rowIndex, colIndex) != this->GetInitGridValue());
+            isMaxValue = ((*this->pSolved)(rowIndex, colIndex) == this->GetMaxGridValue());
+            
+            if (!skipValidCheck && isMaxValue)
+            {
+                (*this->pSolved)(rowIndex, colIndex) = this->GetInitGridValue();
+            }
+        }
+        while ( skipValidCheck || isMaxValue );
+        
+        val = (*this->pSolved)(rowIndex, colIndex) + this->GetIncrementValue();
+        
+        (*this->pSolved)(rowIndex, colIndex) = val;
+    }
+    
 }
 
 template <typename T>
@@ -719,12 +749,6 @@ template <typename T>
 T Puzzle<T>::convertInt(const int val)
 {
     return T{val};
-}
-
-template <typename T>
-void Puzzle<T>::Solve()
-{
-    this->solve(0, 0);
 }
 
 template <typename T>
