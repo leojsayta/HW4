@@ -20,15 +20,6 @@
 using namespace std;
 using namespace boost::numeric::ublas;
 
-class Sequence
-{
-private:
-    
-    
-public:
-    
-};
-
 template <typename T>
 class Puzzle
 {
